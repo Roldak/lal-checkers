@@ -1,0 +1,78 @@
+{
+  "always": {
+    "assign0": [
+      {
+        "trace:": [
+          "assign0",
+          "start0"
+        ],
+        "values": {
+          "$stack": "({}, 0)",
+          "ptr": "{Get_0(0x00000001)}"
+        }
+      }
+    ],
+    "assign1": [
+      {
+        "trace:": [
+          "assign0",
+          "assign1",
+          "start0"
+        ],
+        "values": {
+          "$stack": "({1: '([42, 42], [-2147483648, 2147483647])'}, 0)",
+          "ptr": "{Get_0(0x00000001)}"
+        }
+      }
+    ],
+    "start0": [
+      {
+        "trace:": [
+          "start0"
+        ],
+        "values": {
+          "$stack": "({}, 0)",
+          "ptr": "{[all-path]}"
+        }
+      }
+    ]
+  },
+  "le_t_eq_v": {
+    "assign0": [
+      {
+        "trace:": [
+          "assign0",
+          "start0"
+        ],
+        "values": {
+          "$stack": "({}, 0)",
+          "ptr": "{Get_0(0x00000001)}"
+        }
+      }
+    ],
+    "assign1": [
+      {
+        "trace:": [
+          "assign0",
+          "assign1",
+          "start0"
+        ],
+        "values": {
+          "$stack": "({1: '([42, 42], [-2147483648, 2147483647])'}, 0)",
+          "ptr": "{Get_0(0x00000001)}"
+        }
+      }
+    ],
+    "start0": [
+      {
+        "trace:": [
+          "start0"
+        ],
+        "values": {
+          "$stack": "({}, 0)",
+          "ptr": "{[all-path]}"
+        }
+      }
+    ]
+  }
+}

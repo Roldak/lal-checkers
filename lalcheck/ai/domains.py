@@ -1088,25 +1088,6 @@ class AccessPathsLattice(AbstractDomain):
     """
     HasSplit = Capability.Yes
 
-    class NullDeref(LookupError):
-        """
-        The exception to throw in case a null dereference occurs.
-        """
-        pass
-
-    class TopValue(LookupError):
-        """
-        The exception to throw in case a dereference on the top value occurs.
-        """
-        pass
-
-    class BottomValue(LookupError):
-        """
-        The exception to throw in case a dereference on the bottom value
-        occurs.
-        """
-        pass
-
     class AccessPath(object):
         """
         Base class for access paths expressions.
@@ -1118,15 +1099,17 @@ class AccessPathsLattice(AbstractDomain):
             """
             raise NotImplementedError
 
-        def access(self, state):
+        def access(self, state, value_domain):
             """
             Returns the value stored in the memory at this access path.
             :param object state: The memory state.
+            :param AbstractDomain value_domain: The domain of the values being
+                accessed.
             :rtype: object
             """
             raise NotImplementedError
 
-        def inv_access(self, state, value):
+        def strong_update(self, state, value):
             """
             Assigns the given value to the location in the memory at this
             access path.
@@ -1134,12 +1117,6 @@ class AccessPathsLattice(AbstractDomain):
             :param object value: The value to assign.
             """
             raise NotImplementedError
-
-        def update(self, state, value):
-            """
-            See inv_access.
-            """
-            return self.inv_access(state, value)
 
         def __or__(self, other):
             """
@@ -1237,11 +1214,13 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return float('inf')
 
-        def access(self, state):
-            raise AccessPathsLattice.TopValue
+        def access(self, state, value_domain):
+            return value_domain.top
 
-        def inv_access(self, state, value):
-            raise AccessPathsLattice.TopValue
+        def strong_update(self, state, value):
+            # Unsoundness site: We could forget everything about the memory,
+            # but we choose not to anything instead.
+            pass
 
         def __or__(self, other):
             return self
@@ -1284,11 +1263,11 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return 1
 
-        def access(self, state):
-            raise AccessPathsLattice.NullDeref
+        def access(self, state, value_domain):
+            return value_domain.bottom
 
-        def inv_access(self, state, value):
-            raise AccessPathsLattice.NullDeref
+        def strong_update(self, state, value):
+            pass
 
         def __or__(self, other):
             if (isinstance(other, AccessPathsLattice.Null) or
@@ -1336,11 +1315,11 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return float('inf')
 
-        def access(self, state):
-            raise AccessPathsLattice.TopValue
+        def access(self, state, value_domain):
+            return value_domain.top
 
-        def inv_access(self, state, value):
-            raise AccessPathsLattice.TopValue
+        def strong_update(self, state, value):
+            pass
 
         def __or__(self, other):
             if (isinstance(other, AccessPathsLattice.Null) or
@@ -1397,13 +1376,13 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return 1
 
-        def access(self, state):
+        def access(self, state, value_domain):
             if self.val in state[0]:
                 return state[0][self.val][1]
             else:
-                raise AccessPathsLattice.TopValue
+                return value_domain.top
 
-        def inv_access(self, state, value):
+        def strong_update(self, state, value):
             state[0][self.val] = (self.dom, value)
 
         def __or__(self, other):
@@ -1476,10 +1455,10 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return 1
 
-        def access(self, state):
+        def access(self, state, value_domain):
             raise NotImplementedError
 
-        def inv_access(self, state):
+        def strong_update(self, state, value):
             raise NotImplementedError
 
         def __or__(self, other):
@@ -1549,19 +1528,12 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return self.prefix.size()
 
-        def access(self, state):
-            return self.prefix.access(state)[self.component]
+        def access(self, state, value_domain):
+            return self.prefix.access(state, self.prefix.dom)[self.component]
 
-        def inv_access(self, state, value):
-            top = self.prefix.dom.top
-            self.prefix.inv_access(
-                state,
-                top[:self.component] + (value,) + top[self.component+1:]
-            )
-
-        def update(self, state, value):
-            prod = self.prefix.access(state)
-            self.prefix.inv_access(
+        def strong_update(self, state, value):
+            prod = self.prefix.access(state, self.prefix.dom)
+            self.prefix.strong_update(
                 state,
                 prod[:self.component] + (value,) + prod[self.component+1:]
             )
@@ -1630,11 +1602,11 @@ class AccessPathsLattice(AbstractDomain):
         def size(self):
             return 0
 
-        def access(self, state):
-            raise AccessPathsLattice.BottomValue
+        def access(self, state, value_domain):
+            return value_domain.bottom
 
-        def inv_access(self, state, value):
-            raise AccessPathsLattice.BottomValue
+        def strong_update(self, state, value):
+            pass
 
         def __or__(self, other):
             return other

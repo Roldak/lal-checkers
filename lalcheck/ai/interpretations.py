@@ -808,8 +808,8 @@ def custom_pointer_interpreter(tpe):
 
             elif sig.name == ops.DEREF and sig.input_domains[0] == ptr_dom:
                 return (
-                    access_paths_ops.deref(ptr_dom, sig.output_domain),
-                    access_paths_ops.inv_deref(ptr_dom, sig.input_domains[1])
+                    access_paths_ops.deref(sig.output_domain),
+                    access_paths_ops.inv_deref(sig.input_domains[1])
                 )
 
             elif (sig.name == ops.UPDATED and len(sig.input_domains) == 3
@@ -817,7 +817,7 @@ def custom_pointer_interpreter(tpe):
                                  domains.RandomAccessMemory)
                   and sig.input_domains[1] == ptr_dom):
                 return (
-                    access_paths_ops.updated(ptr_dom),
+                    access_paths_ops.updated,
                     access_paths_ops.inv_updated,
                 )
 

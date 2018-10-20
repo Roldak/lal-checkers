@@ -2,65 +2,34 @@ import boolean_ops
 from itertools import product as cartesian_product
 
 
-def deref(ptr_dom, elem_dom):
-    path_dom = ptr_dom.dom
-
-    def try_access(ptr, memory):
-        try:
-            return ptr.access(memory)
-        except path_dom.NullDeref:
-            return elem_dom.bottom
-        except path_dom.TopValue:
-            return elem_dom.top
-        except path_dom.BottomValue:
-            return elem_dom.bottom
-
+def deref(elem_dom):
     def do(ptrs, memory):
         return reduce(
             elem_dom.join,
-            [try_access(ptr, memory) for ptr in ptrs],
+            [ptr.access(memory, elem_dom) for ptr in ptrs],
             elem_dom.bottom
         )
 
     return do
 
 
-def inv_deref(ptr_dom, mem_dom):
-    path_dom = ptr_dom.dom
-
-    def try_inv_access(ptr, memory, elem):
-        try:
-            ptr.inv_access(memory, elem)
-        except (path_dom.NullDeref, path_dom.TopValue, path_dom.BottomValue):
-            pass
-
+def inv_deref(mem_dom):
     def do(elem, addr_constr, mem_constr):
         memory = (mem_constr[0].copy(), mem_constr[1])
         for addr in addr_constr:
-            try_inv_access(addr, memory, elem)
+            addr.strong_update(memory, elem)
 
         return addr_constr, mem_dom.meet(mem_constr, memory)
 
     return do
 
 
-def updated(ptr_dom):
-    path_dom = ptr_dom.dom
+def updated(mem, ptr, val):
+    updated_mem = (mem[0].copy(), mem[1])
+    for addr in ptr:
+        addr.strong_update(updated_mem, val)
 
-    def try_update(ptr, memory, elem):
-        try:
-            ptr.update(memory, elem)
-        except (path_dom.NullDeref, path_dom.TopValue, path_dom.BottomValue):
-            pass
-
-    def do(mem, ptr, val):
-        updated_mem = (mem[0].copy(), mem[1])
-        for addr in ptr:
-            try_update(addr, updated_mem, val)
-
-        return updated_mem
-
-    return do
+    return updated_mem
 
 
 def inv_updated(*_):
