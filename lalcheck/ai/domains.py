@@ -1118,6 +1118,15 @@ class AccessPathsLattice(AbstractDomain):
             """
             raise NotImplementedError
 
+        def weak_update(self, state, value):
+            """
+            Consider the given value as a possible value of the living at the
+            location in the memory at this access path.
+            :param object state: The memory state.
+            :param object value: The value to consider.
+            """
+            raise NotImplementedError
+
         def __or__(self, other):
             """
             Returns the abstract join with another access path.
@@ -1222,6 +1231,9 @@ class AccessPathsLattice(AbstractDomain):
             # but we choose not to anything instead.
             pass
 
+        def weak_update(self, state, value):
+            pass
+
         def __or__(self, other):
             return self
 
@@ -1267,6 +1279,9 @@ class AccessPathsLattice(AbstractDomain):
             return value_domain.bottom
 
         def strong_update(self, state, value):
+            pass
+
+        def weak_update(self, state, value):
             pass
 
         def __or__(self, other):
@@ -1319,6 +1334,9 @@ class AccessPathsLattice(AbstractDomain):
             return value_domain.top
 
         def strong_update(self, state, value):
+            pass
+
+        def weak_update(self, state, value):
             pass
 
         def __or__(self, other):
@@ -1384,6 +1402,11 @@ class AccessPathsLattice(AbstractDomain):
 
         def strong_update(self, state, value):
             state[0][self.val] = (self.dom, value)
+
+        def weak_update(self, state, value):
+            state[0][self.val] = (
+                self.dom, self.dom.join(state[0][self.val][1], value)
+            )
 
         def __or__(self, other):
             if self <= other:
@@ -1461,6 +1484,9 @@ class AccessPathsLattice(AbstractDomain):
         def strong_update(self, state, value):
             raise NotImplementedError
 
+        def weak_update(self, state, value):
+            raise NotImplementedError
+
         def __or__(self, other):
             if self <= other:
                 return other
@@ -1536,6 +1562,13 @@ class AccessPathsLattice(AbstractDomain):
             self.prefix.strong_update(
                 state,
                 prod[:self.component] + (value,) + prod[self.component+1:]
+            )
+
+        def weak_update(self, state, value):
+            prod = self.prefix.access(state, self.prefix.dom)
+            self.prefix.weak_update(
+                state,
+                prod[:self.component] + (value,) + prod[self.component + 1:]
             )
 
         def __or__(self, other):

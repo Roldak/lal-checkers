@@ -16,8 +16,12 @@ def deref(elem_dom):
 def inv_deref(mem_dom):
     def do(elem, addr_constr, mem_constr):
         memory = (mem_constr[0].copy(), mem_constr[1])
-        for addr in addr_constr:
-            addr.strong_update(memory, elem)
+
+        if len(addr_constr) == 1:
+            addr_constr[0].strong_update(memory, elem)
+        else:
+            for addr in addr_constr:
+                addr.weak_update(memory, elem)
 
         return addr_constr, mem_dom.meet(mem_constr, memory)
 
@@ -26,8 +30,12 @@ def inv_deref(mem_dom):
 
 def updated(mem, ptr, val):
     updated_mem = (mem[0].copy(), mem[1])
-    for addr in ptr:
-        addr.strong_update(updated_mem, val)
+
+    if len(ptr) == 1:
+        ptr[0].strong_update(updated_mem, val)
+    else:
+        for addr in ptr:
+            addr.weak_update(updated_mem, val)
 
     return updated_mem
 
